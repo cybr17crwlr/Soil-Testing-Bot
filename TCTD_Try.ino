@@ -1,32 +1,28 @@
+//TCTD-IIT GUWAHATI
+//This module needs to be added as a function to the control module
+//After determining npk values, intr pin to be set to high for data transfer
+
+//Set pins
 int intr = 13;
-int inp = 12;
+
+//NPK values, currently set at random
+//Determined values to be stored here
 int npk[3] = {50,200,3000};
 
 void setup() {
-  // put your setup code here, to run once:
+  //Start Serial
   Serial.begin(115200);
+  //Set PinModes
   pinMode(intr, OUTPUT);
-  pinMode(inp, INPUT);
   digitalWrite(intr, LOW);
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
-  if (digitalRead(inp))
-  {
-    for (int i=0; i<10; i++)
-    {
-      npk[0] += 12;
-      npk[1] += 25;
-      npk[2] += 3;
-      digitalWrite(intr, HIGH);
-      Serial.print(String(npk[0]) + "," + String(npk[1]) + "," + String(npk[2]) + "|");
-      
-      digitalWrite(intr, LOW);
-      delay(500);
-    }
-    npk[0] = 50;
-    npk[1] = 200;
-    npk[2] = 3000;
-  }
+  //Start transmission
+  digitalWrite(intr, HIGH);
+  //Send serial data
+  Serial.print(String(npk[0]) + "," + String(npk[1]) + "," + String(npk[2]) + "|");
+  //End transmission to prevent data mismatch
+  digitalWrite(intr, LOW);
+  delay(500);
 }
