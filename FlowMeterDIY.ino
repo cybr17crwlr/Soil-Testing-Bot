@@ -48,6 +48,7 @@ void setup()
   // Configured to trigger on a FALLING state change (transition from HIGH
   // state to LOW state)
   attachInterrupt(sensorInterrupt, pulseCounter, FALLING);
+ pinMode(motor, OUTPUT);
 }
 
 /**
@@ -55,8 +56,9 @@ void setup()
  */
 void loop()
 {
-  digitalWrite(motor,HIGH);
+  
    while(totalMilliLitres<250){
+    digitalWrite(motor,LOW);
    if((millis() - oldTime) > 300)    // Only process counters once per second
   { 
     // Disable the interrupt while calculating flow rate and sending the value to
@@ -112,7 +114,7 @@ void loop()
     
   }
 }
-digitalWrite(motor,LOW);
+digitalWrite(motor,HIGH);
 }
 
 /*
