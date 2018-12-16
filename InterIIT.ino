@@ -67,6 +67,7 @@ void setup() {
   //Turn off pumps
   digitalWrite(fillPin, HIGH);
   digitalWrite(cleanPin, HIGH);  
+  digitalWrite(intr, LOW);
 }
 
 
@@ -74,6 +75,7 @@ void loop() {
   base_servo.write(60);
   digitalWrite(fillPin, HIGH);
   digitalWrite(cleanPin, HIGH);
+  digitalWrite(intr, LOW);
   //1. Insert Sample
   int shake_counter = 0; 
   
@@ -126,13 +128,13 @@ void loop() {
     i = i + 1;
     delay(3000);
   }
-    //6. Transmit value
-    //Data to be stored in npk[3] or change it as needed
-    digitalWrite(intr, HIGH);
-    //Send serial data
-    Serial1.print(String(npk[0]) + "," + String(npk[1]) + "," + String(npk[2]) + "|");
-    //End transmission to prevent data mismatch
-    digitalWrite(intr, LOW);
+  //6. Transmit value
+  //Data to be stored in npk[3] or change it as needed
+  digitalWrite(intr, HIGH);
+  //Send serial data
+  Serial1.print(String(npk[0]) + "," + String(npk[1]) + "," + String(npk[2]) + "|");
+  //End transmission to prevent data mismatch
+  digitalWrite(intr, LOW);
 
   //7. Clean
   delay(4000);
