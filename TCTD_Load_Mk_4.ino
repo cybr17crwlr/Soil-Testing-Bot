@@ -24,6 +24,7 @@ String currState = "";
 String N = "";
 String P = "";
 String K = "";
+void setup()
 {
   //Start serial
   Serial.begin(115200);
