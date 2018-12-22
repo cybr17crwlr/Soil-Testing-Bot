@@ -7,7 +7,7 @@
 //Variables
 Servo base_servo;
 int pos = 60;
-int npk[3] = {0,0,0};
+double npk[3];
 
 //Pins
 int intr            = 30; //NodeMCU Interrupt
@@ -77,66 +77,81 @@ void loop() {
   digitalWrite(cleanPin, HIGH);
   digitalWrite(intr, LOW);
   //1. Insert Sample
-  int shake_counter = 0; 
   
   //2. Fill Water
+  Serial.println("Filling Water");
   fillWater();
   
   //3. Mix
+  Serial.println("Mixing");
   delay(3000);
+  int shake_counter = 0; 
   digitalWrite(vibPin,HIGH);      //Turning vibrating crystal ON.
-  for(shake_counter = 0; shake_counter<10; shake_counter += 1)    //Base Servo Shaker.
+  for(shake_counter = 0; shake_counter<15; shake_counter += 1)    //Base Servo Shaker.
   {
-  for ( ; pos <= 90; pos += 1) 
+  for ( ; pos <= 110; pos += 1) 
   { 
     base_servo.write(pos);              
-    delay(5);                       
+    delay(2);                       
   }
-  for (pos = 90; pos >= 60; pos -= 1) 
+  for (pos = 110; pos >= 60; pos -= 1) 
   { 
     base_servo.write(pos);              
-    delay(5);                       
+    delay(2);                       
   }
   }
   digitalWrite(vibPin,LOW);                 //Turning vibrating crystal OFF.
 
   //4. Get values
-  delay(5000);
+  Serial.println("Getting Sensor data");
+  delay(5000);  //Large delay
   int i = 0;
   int led_no[3] = {rPin, gPin, bPin};
-  //double npk_current;
-  //double npk_current_threshold[3];      // Experimental Observations.
-  //double npk_absorbance[3];
+  double metric;
+  double V0 = 4.35;
+  double Vi0[3] = {3.18,2.00,2.26};      // Experimental Observations
+  double ab_coeff[3] = {1,1,1};
+  double len = 0.01; //10mm
+  double Abs;
+
   while(i<3)
   {
-    int sensorValue = analogRead(A0);
-    //Serial.println(sensorValue);
-    delay(1000);
+    int sensorValue;
     analogWrite(led_no[i],90);
-    delay(3000);
-    sensorValue = analogRead(A0);
-    //Serial.println(sensorValue);
-    
     delay(1000);
-    //double V_LDR = map(sensorValue, 0, 1023, 0, 5);
-    //npk_current = (5.0 - V_LDR)/2200.0;
-    //npk_absorbance[i] = -log10(npk_current/npk_current_threshold[i]);
+    sensorValue = analogRead(A0);
+    Serial.println(sensorValue);
     
-    //Serial.println(npk_absorpance[i]);
-    //Serial.println(npk_current);
+    delay(2000);
+    double V_LDR = mapper(sensorValue, 0, 1023, 0, 5);
+    Serial.println(V_LDR);
+    Abs = -log10((V0-V_LDR)/(5-V_LDR)) - log10((5-Vi0[i])/(V0-Vi0[i]));
+    Serial.println(Abs);
+    //npk[i] = abs(Abs/(ab_coeff[i]*len));
+    npk[i] = V_LDR; //To find thresholds
     analogWrite(led_no[i],0);
     i = i + 1;
-    delay(3000);
+    delay(2000);
   }
   //6. Transmit value
   //Data to be stored in npk[3] or change it as needed
+  Serial.print(npk[0]);
+  Serial.print("\t");
+  Serial.print(npk[1]);
+  Serial.print("\t");
+  Serial.print(npk[2]);
+  Serial.print("\n");
+  Serial.println("Transmitting data");
+  delay(500);
   digitalWrite(intr, HIGH);
   //Send serial data
   Serial1.print(String(npk[0]) + "," + String(npk[1]) + "," + String(npk[2]) + "|");
+  delay(1000);
   //End transmission to prevent data mismatch
   digitalWrite(intr, LOW);
 
   //7. Clean
+  Serial.println("Cleaning");
   delay(4000);
   for(int j = 60;j<=175;j+=1 )
   {base_servo.write(j);
@@ -152,6 +167,7 @@ void loop() {
   for(int j =175;j>=60;j-=1)
   {base_servo.write(j);
   delay(10);}
+  Serial.println("Getting ready for next sample");
   delay(6000); 
 }
 
@@ -163,7 +179,8 @@ void fillWater()
   flowMilliLitres   = 0;
   totalMilliLitres  = 0;
   oldTime           = 0;
-  while(totalMilliLitres<40){
+  
+  while(totalMilliLitres<60){
     digitalWrite(fillPin,LOW);
    if((millis() - oldTime) > 30)    // Only process counters once per second
   { 
@@ -231,3 +248,9 @@ void pulseCounter()
   // Increment the pulse counter
   pulseCount++;
 }
+
+double mapper(double val, double in_min, double in_max, double out_min, double out_max)
+{
+  return (val-in_min)*(out_max-out_min)/(in_max-in_min) + out_min;
+}
+
