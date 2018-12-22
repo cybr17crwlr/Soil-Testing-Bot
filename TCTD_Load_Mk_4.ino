@@ -5,11 +5,11 @@
 #include <ESP8266WiFi.h>
 
 //Define GPIO pins
-#define inPin     16//Input Interrupt Pin
+#define inPin     16//Input Interrupt Pin - D0
 
 //Network credentials
-const char* ssid     = "ENTER SSID";
-const char* password = "ENTER PASSWORD";
+const char* ssid     = "duncan";
+const char* password = "11111111";
 
 //Web server port number
 WiFiServer server(80);
@@ -19,6 +19,7 @@ String header;
 
 //Input values
 bool inIntr = 0;
+bool done = 0;
 //Variables
 String currState = "";
 String N = "";
@@ -54,15 +55,24 @@ void loop()
   currState = "Waiting";
   //Client connection
   WiFiClient client = server.available(); //Listen for incoming clients
+  inIntr = 0;
+  done = 0;
   inIntr = digitalRead(inPin);
-  if (inIntr)
+  if (inIntr && Serial.available())
   {
+      done = 1;
       currState = "Analysing";
       N = Serial.readStringUntil(',');
       P = Serial.readStringUntil(',');
       K = Serial.readStringUntil('|');
-    //delay(500);
+      Serial.print(N);
+      Serial.print("\t");
+      Serial.println(P);
+      Serial.print("\t");
+      Serial.println(K);
+      delay(1000);
   }
+  Serial.println(currState);
   if (client)                             //Start if a new client connects
   {
     Serial.println("New Client");         //Client connected
@@ -94,7 +104,8 @@ void loop()
       
       client.println("</body></html>");
       client.println();
+      
     }
   }
-
+  if (done == 1){ delay(5000);}
 }
